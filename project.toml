@@ -1,0 +1,33 @@
+[project]
+name = "lua370"
+version = "1.0.0-dev"
+type = "library"
+
+[build]
+cflags = ["-DLUA_USE_C89", "-DLUA_USE_JUMPTABLE=0"]
+
+[link]
+autocall = false
+
+[mvs.build.datasets.punch]
+suffix = "OBJECT"
+dsorg = "PO"
+recfm = "FB"
+lrecl = 80
+blksize = 3120
+space = ["TRK", 30, 10, 50]
+
+[mvs.build.datasets.ncalib]
+suffix = "NCALIB"
+dsorg = "PO"
+recfm = "U"
+lrecl = 0
+blksize = 32760
+space = ["TRK", 30, 10, 50]
+
+[dependencies]
+"mvslovers/crent370" = ">=1.0.0"
+
+[artifacts]
+mvs = true
+headers = true
