@@ -14,7 +14,7 @@ suffix = "SOURCE"
 dsorg = "PO"
 recfm = "FB"
 lrecl = 80
-blksize = 3120
+blksize = 19040
 space = ["TRK", 100, 50, 50]
 
 [mvs.build.datasets.punch]
@@ -22,7 +22,7 @@ suffix = "OBJECT"
 dsorg = "PO"
 recfm = "FB"
 lrecl = 80
-blksize = 3120
+blksize = 19040
 space = ["TRK", 30, 10, 50]
 
 [mvs.build.datasets.ncalib]
