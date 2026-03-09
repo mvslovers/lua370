@@ -30,11 +30,11 @@ suffix = "NCALIB"
 dsorg = "PO"
 recfm = "U"
 lrecl = 0
-blksize = 32760
+blksize = 19069
 space = ["TRK", 30, 10, 50]
 
 [dependencies]
-"mvslovers/crent370" = ">=1.0.0"
+"mvslovers/crent370" = ">=1.0.4"
 
 [artifacts]
 mvs = true
