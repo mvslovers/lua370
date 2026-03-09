@@ -5,11 +5,15 @@
 
 # Build artifacts
 *.jcl
+contrib/
+dist/
 .build-warnings
+.mbt/
 
 # IDE
 *.geany
 compile_commands.json
+.cache/
 
 # Environment
 .env
