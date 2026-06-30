@@ -4,34 +4,28 @@ version = "1.0.3-dev"
 type = "library"
 
 [build]
-cflags = ["-O0", "-DLUA_USE_C89", "-DLUA_USE_JUMPTABLE=0"]
+# Lua 5.4 in C89 mode. -O0 (appended after the mbt default -O1, so it wins)
+# keeps cc370 codegen conservative; LUA_USE_JUMPTABLE=0 avoids the
+# computed-goto dispatch path.
+cflags = ["-I", "include", "-O0", "-DLUA_USE_C89", "-DLUA_USE_JUMPTABLE=0"]
 
-[link]
-autocall = false
+# Static library: the whole Lua core + standard libraries. libc370 is the
+# cc370 sysroot (it provides the C runtime plus racf.h / acee.h), so no
+# dependency is declared. Consumers (e.g. httplua) link this archive and
+# #include <lua.h>.
+[lib]
+name = "liblua370"
+sources = ["src/*.c"]
+# Public API headers + lprefix.h (consumers that override a Lua source — e.g.
+# httplua's patched lauxlib/liolib/loadlib — include lprefix.h).
+headers = [
+    "include/lua.h",
+    "include/luaconf.h",
+    "include/lualib.h",
+    "include/lauxlib.h",
+    "include/lua.hpp",
+    "include/lprefix.h",
+]
 
-[mvs.build.datasets.source]
-suffix = "SOURCE"
-dsorg = "PO"
-recfm = "FB"
-lrecl = 80
-blksize = 19040
-space = ["TRK", 100, 50, 50]
-
-[mvs.build.datasets.punch]
-suffix = "OBJECT"
-dsorg = "PO"
-recfm = "FB"
-lrecl = 80
-blksize = 19040
-space = ["TRK", 30, 10, 50]
-
-[mvs.build.datasets.ncalib]
-suffix = "NCALIB"
-dsorg = "PO"
-recfm = "U"
-lrecl = 0
-blksize = 19069
-space = ["TRK", 30, 10, 50]
-
-[dependencies]
-"mvslovers/crent370" = ">=1.0.5"
+[release]
+version_files = ["VERSION"]

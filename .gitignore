@@ -5,6 +5,7 @@
 
 # Build artifacts
 *.jcl
+build/
 contrib/
 dist/
 .build-warnings
