@@ -53,7 +53,7 @@ project (e.g. **httplua**) by declaring it in that project's `project.toml`:
 
 ```toml
 [dependencies]
-"mvslovers/lua370" = ">=1.0.3-dev"
+"mvslovers/lua370" = ">=1.1.0-dev"
 ```
 
 `make deps` then stages `liblua370.a` plus the public headers (`lua.h`,
