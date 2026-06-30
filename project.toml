@@ -6,8 +6,11 @@ type = "library"
 [build]
 # Lua 5.4 in C89 mode. -O0 (appended after the mbt default -O1, so it wins)
 # keeps cc370 codegen conservative; LUA_USE_JUMPTABLE=0 avoids the
-# computed-goto dispatch path.
-cflags = ["-I", "include", "-O0", "-DLUA_USE_C89", "-DLUA_USE_JUMPTABLE=0"]
+# computed-goto dispatch path. LUA_USE_CTYPE=1 forces the EBCDIC-aware
+# <ctype.h> for the lexer: lctype.h auto-detects via `#if 'A' == 65`, but
+# cc370's cross-preprocessor evaluates that as host ASCII and would wrongly
+# pick the ASCII luai_ctype_ table, mis-lexing EBCDIC Lua source.
+cflags = ["-I", "include", "-O0", "-DLUA_USE_C89", "-DLUA_USE_JUMPTABLE=0", "-DLUA_USE_CTYPE=1"]
 
 # Static library: the whole Lua core + standard libraries. libc370 is the
 # cc370 sysroot (it provides the C runtime plus racf.h / acee.h), so no
