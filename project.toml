@@ -1,7 +1,9 @@
 [project]
 name = "lua370"
 version = "1.0.3-dev"
-type = "library"
+# Hybrid: the standalone interpreter/compiler load modules AND the shipped
+# static library (consumed by httplua and others).
+type = "application"
 
 [build]
 # Lua 5.4 in C89 mode. -O0 (appended after the mbt default -O1, so it wins)
@@ -12,10 +14,24 @@ type = "library"
 # pick the ASCII luai_ctype_ table, mis-lexing EBCDIC Lua source.
 cflags = ["-I", "include", "-O0", "-DLUA_USE_C89", "-DLUA_USE_JUMPTABLE=0", "-DLUA_USE_CTYPE=1"]
 
-# Static library: the whole Lua core + standard libraries. libc370 is the
-# cc370 sysroot (it provides the C runtime plus racf.h / acee.h), so no
-# dependency is declared. Consumers (e.g. httplua) link this archive and
-# #include <lua.h>.
+# ── Load modules: the standalone interpreter and bytecode compiler ──
+[[module]]
+name = "LUA"
+startup = "crt1"
+sources = ["app/lua.c"]
+
+[[module]]
+name = "LUAC"
+startup = "crt1"
+sources = ["app/luac.c"]
+
+# ── Lua core + standard libraries ──────────────────────────────────
+# As [internal] the core is autocalled into the LUA/LUAC modules (each lists
+# only its own main); as [lib] it is the shipped archive consumers link
+# (httplua, ...). Same objects -- compiled once, archived into both.
+[internal]
+sources = ["src/*.c"]
+
 [lib]
 name = "liblua370"
 sources = ["src/*.c"]
