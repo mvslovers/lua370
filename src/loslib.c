@@ -1287,16 +1287,23 @@ static int os_clock (lua_State *L) {
 	__64 msec;		/* miliseconds (1000ms == 1s) */
 	lua_Number res;
 
-	/* Note: The clock() function in /crent370/clib/clock.c is broken
-	 * and always returns -1, so we're going to use clock64() 
-	 * in /crent470/time64/tm64clck.c and process it using __64 
-	 * variables before calculating the result as a lua_Number 
-	 * (double float) value.
+	/* Note: libc370's clock() is a stub that always returns -1, so we take
+	 * the time from the 64-bit clock instead and process it using __64
+	 * variables before calculating the result as a lua_Number (double
+	 * float) value.
+	 *
+	 * Deliberately mclock64(), not clock64(): __64_divmod_u32() below
+	 * splits the value by CLOCKS_PER_SEC (1000) into whole seconds plus a
+	 * millisecond remainder, so it needs a millisecond source. libc370 #49
+	 * moved clock64() to seconds resolution; mclock64() stays in
+	 * milliseconds. Reading clock64() here now yields a result 1000x too
+	 * small, and nothing catches it: clock64_t and mclock64_t are both
+	 * plain uint64_t, so the resolution mismatch is silent.
 	 */
 	// wtof("%s: CLOCKS_PER_SEC=%u", __func__, CLOCKS_PER_SEC);
 	// wtof("%s: clock()=%u", __func__, clock());
-  
-	c.u64 = clock64();
+
+	c.u64 = mclock64();
 	__64_divmod_u32(&c, CLOCKS_PER_SEC, &sec, &msec);
 
 	/* scale result as seconds.miliseconds value */
