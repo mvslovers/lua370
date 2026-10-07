@@ -22,8 +22,9 @@ run on MVS to build it.
 
 ### Prerequisites
 
-- The **cc370** host toolchain (a GCC 3.4.6 fork: `cc370`, `as370`, `ar370`).
-  It also provides the **libc370** sysroot (the C runtime plus `racf.h` / `acee.h`).
+- The **cc370** host toolchain, 1.4.0 or later (a GCC 3.4.6 fork: `cc370`,
+  `as370`, `ar370`, `ld370`), with the **libc370** 2.4.1 or later sysroot
+  installed into it (the C runtime plus `mvs/racf.h` / `ibm/mvs/ihaacee.h`).
 - **Python 3.12+**
 
 ### Clone

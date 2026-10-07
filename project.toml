@@ -15,14 +15,22 @@ type = "application"
 cflags = ["-I", "include", "-O0", "-DLUA_USE_C89", "-DLUA_USE_JUMPTABLE=0", "-DLUA_USE_CTYPE=1"]
 
 # ── Load modules: the standalone interpreter and bytecode compiler ──
+# Neither is RENT nor REUS. LUAC keeps its options in writable statics
+# (listing, dumping, stripping, Output, tmname) that one run leaves set for
+# the next. LUA keeps its two statics in a WSA (__wsaget), but the template
+# `luawsa` is not const, so the module-data scan rejects it as RENT; it is
+# declared like LUAC until that is looked at. The Lua core holds no writable
+# data.
 [[module]]
 name = "LUA"
-startup = "crt1"
+rent = false
+reus = false
 sources = ["app/lua.c"]
 
 [[module]]
 name = "LUAC"
-startup = "crt1"
+rent = false
+reus = false
 sources = ["app/luac.c"]
 
 # ── Lua core + standard libraries ──────────────────────────────────
@@ -49,10 +57,9 @@ headers = [
 [toolchain]
 # Pins the refs release.yml builds the published artifacts against; build.yml
 # deliberately keeps floating on main so a cc370/libc370 regression surfaces
-# in a PR build (mbt#68). cc370 is omitted -- it defaults to main and has no
-# releases to pin to yet. Without this the release CI builds against libc370
-# main, which becomes the incompatible 2.0 after the cut (libc370#245).
-libc370 = "1.0.8"
+# in a PR build (mbt#68).
+cc370 = "1.4.0"
+libc370 = "2.4.1"
 
 [release]
 version_files = ["VERSION"]
