@@ -3,27 +3,16 @@ schema = 3
 [project]
 name = "lua370"
 version = "1.2.0-dev"
-# Hybrid: the standalone interpreter/compiler load modules AND the shipped
-# static library (consumed by httplua and others).
 kind = "application"
 
+[toolchain]
+cc370 = "1.4.0"
+libc370 = "2.4.1"
+mbt = "3.0"
+
 [build]
-# Lua 5.4 in C89 mode. -O0 (appended after the mbt default -O1, so it wins)
-# keeps cc370 codegen conservative; LUA_USE_JUMPTABLE=0 avoids the
-# computed-goto dispatch path. LUA_USE_CTYPE=1 forces the EBCDIC-aware
-# <ctype.h> for the lexer: lctype.h auto-detects via `#if 'A' == 65`, but
-# cc370's cross-preprocessor evaluates that as host ASCII and would wrongly
-# pick the ASCII luai_ctype_ table, mis-lexing EBCDIC Lua source.
-include = ["include"]
 cflags = ["-O0", "-DLUA_USE_C89", "-DLUA_USE_JUMPTABLE=0", "-DLUA_USE_CTYPE=1"]
 
-# ── Load modules: the standalone interpreter and bytecode compiler ──
-# Neither is RENT nor REUS. LUAC keeps its options in writable statics
-# (listing, dumping, stripping, Output, tmname) that one run leaves set for
-# the next. LUA keeps its two statics in a WSA (__wsaget), but the template
-# `luawsa` is not const, so the module-data scan rejects it as RENT; it is
-# declared like LUAC until that is looked at. The Lua core holds no writable
-# data.
 [module.LUA]
 rent = false
 reus = false
@@ -34,35 +23,17 @@ rent = false
 reus = false
 sources = ["app/luac.c"]
 
-# ── Lua core + standard libraries ──────────────────────────────────
-# As [internal] the core is autocalled into the LUA/LUAC modules (each lists
-# only its own main); as [lib] it is the shipped archive consumers link
-# (httplua, ...). Same objects -- compiled once, archived into both.
 [internal]
 sources = ["src/*.c"]
 
 [lib]
 name = "liblua370"
 sources = ["src/*.c"]
-# Public API headers + lprefix.h (consumers that override a Lua source — e.g.
-# httplua's patched lauxlib/liolib/loadlib — include lprefix.h).
 headers = [
-    "include/lua.h",
-    "include/luaconf.h",
-    "include/lualib.h",
-    "include/lauxlib.h",
-    "include/lua.hpp",
-    "include/lprefix.h",
+	"include/lua.h",
+	"include/luaconf.h",
+	"include/lualib.h",
+	"include/lauxlib.h",
+	"include/lua.hpp",
+	"include/lprefix.h",
 ]
-
-[toolchain]
-# Pins the refs release.yml builds the published artifacts against; build.yml
-# deliberately keeps floating on main so a cc370/libc370 regression surfaces
-# in a PR build (mbt#68).
-cc370 = "1.4.0"
-libc370 = "2.4.1"
-mbt = "3.0"
-
-[deploy]
-# The development library `mbt deploy` writes to (<PROD>.DEV.LINKLIB).
-target = "LUA370.DEV.LINKLIB"
