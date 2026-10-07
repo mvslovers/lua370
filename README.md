@@ -15,7 +15,7 @@ This project is maintained as part of the [mvslovers](https://github.com/mvslove
 
 ## Building
 
-Lua370 builds with [mbt](https://github.com/mvslovers/mbt) **v2** (MVS Build
+Lua370 builds with [mbt](https://github.com/mvslovers/mbt) **3** (MVS Build
 Tools). The whole build runs **on the host** with the **cc370** toolchain and
 produces the `LUA`/`LUAC` load modules and the static library — nothing needs to
 run on MVS to build it.
@@ -25,40 +25,45 @@ run on MVS to build it.
 - The **cc370** host toolchain, 1.4.0 or later (a GCC 3.4.6 fork: `cc370`,
   `as370`, `ar370`, `ld370`), with the **libc370** 2.4.1 or later sysroot
   installed into it (the C runtime plus `mvs/racf.h` / `ibm/mvs/ihaacee.h`).
-- **Python 3.12+**
+- **mbt** 3.0 on your `PATH` (a single binary from the
+  [mbt releases](https://github.com/mvslovers/mbt/releases)). `mbt doctor`
+  checks the toolchain, the sysroot and the MVS connection (it logs on).
 
 ### Clone
 
 ```bash
-git clone --recursive https://github.com/mvslovers/lua370.git
+git clone https://github.com/mvslovers/lua370.git
 cd lua370
 ```
 
 ### Build
 
 ```bash
-make            # build the LUA + LUAC load modules (on the host)
-make all        # the modules + the liblua370.a library archive
-make deploy     # XMIT + upload + RECEIVE the modules into a LINKLIB (touches MVS)
-make package    # dist/ tarballs: <ver>-load (modules) + <ver>-lib (archive + headers)
-make clean      # remove build/ and dist/
+mbt build         # build the LUA + LUAC load modules (on the host)
+mbt build --all   # the modules + the liblua370.a library archive
+mbt deploy        # XMIT + upload + RECEIVE the modules into LUA370.DEV.LINKLIB (touches MVS)
+mbt package       # dist/: <ver>-load (modules) + <ver>-lib (archive + headers)
+mbt clean         # remove build/ and dist/
 ```
 
-Everything compiles on the host with `cc370`/`ar370`/`ld370`; only `make deploy`
-needs an MVS connection.
+Everything compiles on the host with `cc370`/`ar370`/`ld370`; only `mbt deploy`
+needs an MVS connection. mbt finds the MVS system in `~/.mbt/targets.toml`,
+set up once per machine with `mbt target import` (see mbt's
+`docs/MIGRATION.md`, section 5).
 
 ### Using lua370 as a dependency
 
-lua370 also ships an embeddable **library** — link it from another mbt v2
-project (e.g. **httplua**) by declaring it in that project's `project.toml`:
+lua370 also ships an embeddable **library** — link it from another mbt
+project (e.g. **httplua**) by declaring it in that project's `mbt.toml`
+(`project.toml` under mbt 2):
 
 ```toml
 [dependencies]
 "mvslovers/lua370" = ">=1.2.0-dev"
 ```
 
-`make deps` then stages `liblua370.a` plus the public headers (`lua.h`,
-`luaconf.h`, `lualib.h`, `lauxlib.h`, `lua.hpp`) under `.mbt/deps/lua370/`, and
+`mbt deps` then stages `liblua370.a` plus the public headers (`lua.h`,
+`luaconf.h`, `lualib.h`, `lauxlib.h`, `lua.hpp`, `lprefix.h`) under `.mbt/deps/lua370/`, and
 the consuming build links the archive by autocall.
 
 ## Project Structure
@@ -67,9 +72,7 @@ the consuming build links the archive by autocall.
 app/          Standalone mains (lua.c -> LUA, luac.c -> LUAC)
 src/          Lua 5.4 core + standard libraries (the shared core + the library)
 include/      Header files (public Lua API + internals)
-project.toml  mbt project definition (type = application; modules + [internal] + [lib])
-Makefile      two-line include of mbt/mk/mbt.mk
-mbt/          mbt build tool (git submodule)
+mbt.toml      mbt project definition (kind = application; modules + [internal] + [lib])
 ```
 
 ## Acknowledgments

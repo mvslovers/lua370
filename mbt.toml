@@ -1,9 +1,11 @@
+schema = 3
+
 [project]
 name = "lua370"
 version = "1.2.0-dev"
 # Hybrid: the standalone interpreter/compiler load modules AND the shipped
 # static library (consumed by httplua and others).
-type = "application"
+kind = "application"
 
 [build]
 # Lua 5.4 in C89 mode. -O0 (appended after the mbt default -O1, so it wins)
@@ -12,7 +14,8 @@ type = "application"
 # <ctype.h> for the lexer: lctype.h auto-detects via `#if 'A' == 65`, but
 # cc370's cross-preprocessor evaluates that as host ASCII and would wrongly
 # pick the ASCII luai_ctype_ table, mis-lexing EBCDIC Lua source.
-cflags = ["-I", "include", "-O0", "-DLUA_USE_C89", "-DLUA_USE_JUMPTABLE=0", "-DLUA_USE_CTYPE=1"]
+include = ["include"]
+cflags = ["-O0", "-DLUA_USE_C89", "-DLUA_USE_JUMPTABLE=0", "-DLUA_USE_CTYPE=1"]
 
 # ── Load modules: the standalone interpreter and bytecode compiler ──
 # Neither is RENT nor REUS. LUAC keeps its options in writable statics
@@ -21,14 +24,12 @@ cflags = ["-I", "include", "-O0", "-DLUA_USE_C89", "-DLUA_USE_JUMPTABLE=0", "-DL
 # `luawsa` is not const, so the module-data scan rejects it as RENT; it is
 # declared like LUAC until that is looked at. The Lua core holds no writable
 # data.
-[[module]]
-name = "LUA"
+[module.LUA]
 rent = false
 reus = false
 sources = ["app/lua.c"]
 
-[[module]]
-name = "LUAC"
+[module.LUAC]
 rent = false
 reus = false
 sources = ["app/luac.c"]
@@ -60,6 +61,8 @@ headers = [
 # in a PR build (mbt#68).
 cc370 = "1.4.0"
 libc370 = "2.4.1"
+mbt = "3.0"
 
-[release]
-version_files = ["VERSION"]
+[deploy]
+# The development library `mbt deploy` writes to (<PROD>.DEV.LINKLIB).
+target = "LUA370.DEV.LINKLIB"
