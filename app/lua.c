@@ -44,9 +44,14 @@ static const char *progname = LUA_PROGNAME;
 
 #else 
 /* This is our writeable static code */
-#include "clib.h"
-#include "clibio.h"
-#include "osdcb.h"
+#include <ctype.h>
+#include <time.h>
+#include <mvs/crt.h>
+#include <mvs/env.h>
+#include <mvs/wsa.h>
+#include <mvs/wto.h>
+#include <ext/array.h>
+#include <ibm/mvs/dcbd.h>
 typedef struct luawsa {
 	lua_State	*globalL;
 	const char	*progname;
@@ -70,8 +75,11 @@ static LUAWSA *getwsa(void)
  * avoid name collision with the standard SYSPRINT, SYSTERM and SYSIN
  * DD names.
  */
-#include "ikjcppl.h"	/* CPPL typedef */
-#include "clibstae.h"               /* C runtime recovery routines  */
+#include <ibm/mvs/ikjcppl.h>	/* CPPL typedef */
+#include <mvs/recovery.h>           /* C runtime recovery routines  */
+
+/* libc370's own @@start.c declares it the same way: no public header does */
+extern void __exita(int status);
 
 #define MAXPARMS 50 /* maximum number of arguments we can handle */
 

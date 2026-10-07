@@ -15,8 +15,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <time64.h>		/* 64 bit time */
-#include <clibtry.h>	/* try() */
+#include <ctype.h>
+#include <ext/int64.h>
+#include <ext/time64.h>		/* 64 bit time */
+#include <mvs/recovery.h>	/* try() */
+#include <mvs/wto.h>
 
 #include "lua.h"
 
@@ -800,9 +803,10 @@ quit:
 	return 1;
 }
 
-#include "cliblist.h"
-#include "clibary.h"
-#include "racf.h"
+#include <mvs/dslist.h>
+#include <ext/array.h>
+#include <mvs/racf.h>
+#include <ibm/mvs/ihaacee.h>
 typedef struct {
 	lua_State	*L;
 	int		    count;
