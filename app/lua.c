@@ -44,9 +44,14 @@ static const char *progname = LUA_PROGNAME;
 
 #else 
 /* This is our writeable static code */
-#include "clib.h"
-#include "clibio.h"
-#include "osdcb.h"
+#include <ctype.h>
+#include <time.h>
+#include <mvs/crt.h>
+#include <mvs/env.h>
+#include <mvs/wsa.h>
+#include <mvs/wto.h>
+#include <ext/array.h>
+#include <ibm/mvs/dcbd.h>
 typedef struct luawsa {
 	lua_State	*globalL;
 	const char	*progname;
@@ -70,24 +75,25 @@ static LUAWSA *getwsa(void)
  * avoid name collision with the standard SYSPRINT, SYSTERM and SYSIN
  * DD names.
  */
-#include "ikjcppl.h"	/* CPPL typedef */
-#include "clibstae.h"               /* C runtime recovery routines  */
+#include <ibm/mvs/ikjcppl.h>	/* CPPL typedef */
+#include <mvs/recovery.h>           /* C runtime recovery routines  */
+
+/* libc370's own @@start.c declares it the same way: no public header does */
+extern void __exita(int status);
 
 #define MAXPARMS 50 /* maximum number of arguments we can handle */
+
+int main(int argc, char **argv);
 
 /* @@CRT0 calls @@START, @@START calls MAIN */
 int
 __start(char *p, char *pgmname, int tsojbid, void **pgmr1)
 {
-	CLIBPPA		*ppa	= __ppaget();
     CLIBGRT     *grt    = __grtget();
     CPPL		*cppl	= NULL;		/* TSO CPPL */
     char 		stdoutdsn[12];
     char 		stderrdsn[12];
     char 		stdindsn[12];
-    int			stdoutdyn	= 0;
-    int			stderrdyn	= 0;
-    int			stdindyn	= 0;
     int         x;
     int         argc;
     unsigned    u;
@@ -96,6 +102,8 @@ __start(char *p, char *pgmname, int tsojbid, void **pgmr1)
     int         parmLen = 0;
     int         progLen = 0;
     char        parmbuf[310];
+
+    (void)tsojbid;
 
     /* if something goes all wrong, capture it! */
     abendrpt(ESTAE_CREATE, DUMP_DEFAULT);
@@ -163,7 +171,7 @@ __start(char *p, char *pgmname, int tsojbid, void **pgmr1)
     /* initialize time zone offset for this thread */
     tzset();
 
-    if (parmLen >= sizeof(parmbuf) - 2) {
+    if ((unsigned)parmLen >= sizeof(parmbuf) - 2) {
         parmLen = sizeof(parmbuf) - 1 - 2;
     }
     if (parmLen < 0) parmLen = 0;
@@ -546,7 +554,7 @@ static int ismember(const char *name)
 	len = strlen(name);
 	if (len > 8) goto quit;
 	for(i=0 ; i < len; i++) {
-		if (isalnum(name[i])) continue;
+		if (isalnum((unsigned char)name[i])) continue;
 		if (strchr("@#$", name[i])) continue;
 		goto quit;
 	}
@@ -582,7 +590,6 @@ static char *make_pathnames(const char *paths, const char *script)
 	char 	*pathname = NULL;
 	int		pathcount = 1;
 	int     scriptlen = strlen(script);
-	int		i;
 	char    *p;
 
 	// wtof("httplua.c:%s: enter paths=\"%s\" script=\"%s\"", __func__, paths, script);
@@ -1040,7 +1047,6 @@ addreturn (lua_State *L)
 		lua_pop(L, 2);  /* pop result from 'luaL_loadbuffer' and modified line */
 	}
 
-quit:
 	// wtof("lua.c:%s: exit status=%d", __func__, status);
 	return status;
 }
@@ -1286,7 +1292,6 @@ int
 main (int argc, char **argv) 
 {
 	int	rc;
-	int	i;
 	int status, result;
 
 #if 0

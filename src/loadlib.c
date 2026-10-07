@@ -758,9 +758,9 @@ static void createclibstable (lua_State *L) {
   lua_setmetatable(L, -2);
 }
 
-#include "racf.h"
-#include "acee.h"
-#include "clibppa.h"
+#include <mvs/racf.h>
+#include <ibm/mvs/ihaacee.h>
+#include <mvs/crt.h>
 typedef struct upt {
 	char 	dontcare[16];
 	char    uptprefx[7];
