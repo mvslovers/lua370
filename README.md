@@ -27,7 +27,7 @@ run on MVS to build it.
   installed into it (the C runtime plus `mvs/racf.h` / `ibm/mvs/ihaacee.h`).
 - **mbt** 3.0 on your `PATH` (a single binary from the
   [mbt releases](https://github.com/mvslovers/mbt/releases)). `mbt doctor`
-  checks the toolchain and the sysroot.
+  checks the toolchain, the sysroot and the MVS connection (it logs on).
 
 ### Clone
 
@@ -63,7 +63,7 @@ project (e.g. **httplua**) by declaring it in that project's `mbt.toml`
 ```
 
 `mbt deps` then stages `liblua370.a` plus the public headers (`lua.h`,
-`luaconf.h`, `lualib.h`, `lauxlib.h`, `lua.hpp`) under `.mbt/deps/lua370/`, and
+`luaconf.h`, `lualib.h`, `lauxlib.h`, `lua.hpp`, `lprefix.h`) under `.mbt/deps/lua370/`, and
 the consuming build links the archive by autocall.
 
 ## Project Structure
