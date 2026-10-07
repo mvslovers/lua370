@@ -282,7 +282,7 @@ typedef struct plist34 {
 static int sendcmd(const char *cmd, unsigned cmdlen)
 {
     int     rc;
-    PLIST34 plist = {0};
+    PLIST34 plist = {0, 0, 0, {0}, {0}};
 
     memset(plist.text, ' ', sizeof(plist.text));
 	if (cmdlen > sizeof(plist.text)) cmdlen = sizeof(plist.text);
@@ -310,8 +310,6 @@ static int os_cmd(lua_State *L)
     int     	rc      = 0;
 	const char *cmd 	= lua_tostring(L, 1);  /* convert it to string */
     int     	cmdlen  = cmd ? strlen(cmd) : 0;
-    char 		resp[80]={0};
-    char    	*p;
 
 
 	/* We have to use try() in case we're not APF authorized */
@@ -424,7 +422,7 @@ static int os_c2x(lua_State *L)
 	resp = calloc(1, resplen + 1);
 	if (!resp) goto failed;
 
-	for(i=0, p=resp; i < len; i++, p+=2) {
+	for(i=0, p=resp; (size_t)i < len; i++, p+=2) {
 		sprintf(p, "%02X", str[i]);
 	}
 	
@@ -460,7 +458,7 @@ static int os_c2d(lua_State *L)
 	if (!bytes) goto failed;
 	if (bytes > 4) bytes = 4;
 	
-	for(i=0; i < len; i++) {
+	for(i=0; (size_t)i < len; i++) {
 		resp.s[0] = resp.s[1];
 		resp.s[1] = resp.s[2];
 		resp.s[2] = resp.s[3];
@@ -496,7 +494,6 @@ quit:
 
 static int os_d2x(lua_State *L)
 {
-    int     	i       = 0;
 	int 		value   = lua_tointeger(L, 1);
 	int 		bytes	= luaL_optinteger(L, 2, -1);
 	char 		resp[12]= {0};
@@ -711,11 +708,11 @@ static int os_x2c(lua_State *L)
 
 	// wtodumpf(str1, len1, "%s: str1", __func__);
 	
-	for(i=0; i < len1; i+=2) {
-		while (isspace(str1[i])) i++; /* skip spaces */
+	for(i=0; (size_t)i < len1; i+=2) {
+		while (isspace((unsigned char)str1[i])) i++; /* skip spaces */
 		tmp[0] = str1[i];
 		tmp[1] = 0;
-		if (i+1<len1) tmp[1] = str1[i+1];
+		if ((size_t)i+1<len1) tmp[1] = str1[i+1];
 		tmp[2] = 0;
 		resp[j++] = (unsigned char) strtoul(tmp, NULL, 16);
 	}	
@@ -724,7 +721,6 @@ static int os_x2c(lua_State *L)
 
 	lua_pushlstring(L, resp, j);
 
-quit:
 	if (resp) free(resp);
 	return 1;
 }
@@ -732,7 +728,6 @@ quit:
 static int os_x2d(lua_State *L)
 {
     int     	i       = 0;
-    int			j		= 0;
     size_t		len		= 0;
 	const char *str 	= lua_tolstring(L, 1, &len);
 	int 		bytes	= luaL_optinteger(L, 2, -1);
@@ -751,8 +746,8 @@ static int os_x2d(lua_State *L)
 	// wtodumpf(str, len, "%s: str", __func__);
 	
 	/* remove spaces from string */
-	for(i=0; i < len; i++) {
-		while(isspace(str[i]))i++;
+	for(i=0; (size_t)i < len; i++) {
+		while(isspace((unsigned char)str[i]))i++;
 		if (!str[i]) continue;
 		buf[0] = buf[1];
 		buf[1] = buf[2];
@@ -774,7 +769,7 @@ static int os_x2d(lua_State *L)
 	}
 
 	if (bytes > 0) {
-		if (strchr("89ABCDEF", toupper(*p))) {
+		if (strchr("89ABCDEF", toupper((unsigned char)*p))) {
 			/* we need to sign extend the hex characters */
 			// wtodumpf(buf, 8, "%s: buf before", __func__);
 			for(x=buf; x < p; x++) {
@@ -957,7 +952,6 @@ static int os_dslist(lua_State *L)
 	lua_pushstring(L, filter);
 	lua_setfield(L,-2,"filter");
 	
-quit:
 	if (dslist) __freeds(&dslist);
 
 	return 1;
@@ -1054,7 +1048,7 @@ static int vollist_settable(lua_State *L, VOLLIST *v, unsigned n)
 	lua_pushstring(L,buf);
 	lua_setfield(L,-2,"type");
 	
-	sprintf(buf, "%4X", v->ucbdasd);
+	sprintf(buf, "%4X", (unsigned)v->ucbdasd);
 	lua_pushstring(L,buf);
 	lua_setfield(L,-2,"ucb");
 
@@ -1067,7 +1061,7 @@ static int vollist_settable(lua_State *L, VOLLIST *v, unsigned n)
 	/* create the formmated string for this table record */
 	sprintf(buf, "%.6s  %4u  %4u   %4u        %4u      %4u      %4X    %4X   %4X   %-12s %s\n",
 		v->volser, v->freecyls, v->freetrks, v->freeexts, v->maxfreecyls, v->maxfreetrks, v->cuu, v->dasdtype,
-		v->ucbdasd, status, comment);
+		(unsigned)v->ucbdasd, status, comment);
 
 	lua_pushstring(L, buf);
 	lua_setfield(L,-2,"string");
@@ -1093,7 +1087,6 @@ static int os_vollist(lua_State *L)
 	unsigned	tally = 0;
 	unsigned	count;
 	unsigned	n;
-	char 		userid[12] = {0};
 	
 	if (filter && !filter[0]) {
 		/* filter appears to be empty string */
@@ -1146,7 +1139,6 @@ static int os_vollist(lua_State *L)
 	lua_pushstring(L, vatlst);
 	lua_setfield(L,-2,"vatlst");
 	
-quit:
 	if (vollist) __freevl(&vollist);
 
 	return 1;
@@ -1159,7 +1151,6 @@ static int os_pdslist(lua_State *L)
 	int			first 		= 1;
 	const char *dataset 	= lua_tostring(L, 1);
 	const char *filter 		= luaL_optstring(L, 2, NULL);
-	const char *option 		= "ALL";
 	PDSLIST     **pdslist 	= NULL;
 	unsigned	count;
 	unsigned	n;
@@ -1233,7 +1224,6 @@ static int os_pdslist(lua_State *L)
 	lua_pushstring(L, filter);
 	lua_setfield(L,-2,"filter");
 
-quit:
 	if (pdslist) __freepd(&pdslist);
 
 	return 1;
